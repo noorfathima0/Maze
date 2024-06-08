@@ -2,9 +2,9 @@
 
 Its a maze game developed in python 
 
-Installation process: 
+* Installation process: 
 
-#in Windows 
+# in Windows 
 
 1. create a virtual environment
    1. py -m venv file_name
