@@ -14,6 +14,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 
 class Cell:
     def __init__(self, row, col):
@@ -159,9 +160,9 @@ def main():
 
             screen.fill(BLACK)
             draw_grid(grid, screen)
-            start_cell.highlight(screen, GREEN)
+            start_cell.highlight(screen, RED)
             end_cell.highlight(screen, GREEN)
-            current_cell.highlight(screen, RED)
+            current_cell.highlight(screen, BLUE)
 
             # Check win condition
             if check_win(current_cell, end_cell):
