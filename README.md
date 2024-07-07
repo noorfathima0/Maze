@@ -22,4 +22,6 @@ Its a maze game developed in python
 
 After creating Virtual environment create a python file and copy the code inside it and run the code and that it
 
-OUTPUT: ![Uploading Screenshot 2024-06-08 at 7.30.55 PM.png…]()
+OUTPUT: 
+![Screenshot 2024-07-07 at 10 22 42 PM](https://github.com/noorfathima0/Maze/assets/151600832/cc5918a4-23d1-46ef-8a8d-629d9f7669fa)
+
