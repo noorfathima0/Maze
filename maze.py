@@ -1,6 +1,9 @@
 import pygame
 import random
 
+# Initialize Pygame
+pygame.init()
+
 # Constants
 WIDTH = 800
 HEIGHT = 600
@@ -14,7 +17,12 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+
+# Sound Effects
+MOVE_SOUND = pygame.mixer.Sound('move.wav')
+WIN_SOUND = pygame.mixer.Sound('win.mp3')
+START_SOUND = pygame.mixer.Sound('start.mp3')
+
 
 class Cell:
     def __init__(self, row, col):
@@ -40,7 +48,8 @@ class Cell:
         y = self.row * CELL_SIZE
         pygame.draw.rect(screen, color, (x + 5, y + 5, CELL_SIZE - 10, CELL_SIZE - 10))
 
-    def index(self, row, col):
+    @staticmethod
+    def index(row, col):
         if row < 0 or col < 0 or row >= ROWS or col >= COLS:
             return None
         return row * COLS + col
@@ -111,15 +120,19 @@ def generate_maze():
 def move_player(direction, current_cell, grid):
     row, col = current_cell.row, current_cell.col
     if direction == 'up' and not current_cell.walls[0]:
-        new_cell = grid[current_cell.index(row - 1, col)]
+        new_cell = grid[Cell.index(row - 1, col)]
     elif direction == 'right' and not current_cell.walls[1]:
-        new_cell = grid[current_cell.index(row, col + 1)]
+        new_cell = grid[Cell.index(row, col + 1)]
     elif direction == 'down' and not current_cell.walls[2]:
-        new_cell = grid[current_cell.index(row + 1, col)]
+        new_cell = grid[Cell.index(row + 1, col)]
     elif direction == 'left' and not current_cell.walls[3]:
-        new_cell = grid[current_cell.index(row, col - 1)]
+        new_cell = grid[Cell.index(row, col - 1)]
     else:
         return current_cell
+    
+    # Play move sound
+    MOVE_SOUND.play()
+
     return new_cell
 
 def check_win(current_cell, end_cell):
@@ -128,54 +141,71 @@ def check_win(current_cell, end_cell):
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    START_SOUND.play()
     pygame.display.set_caption("Maze Game")
     clock = pygame.time.Clock()
 
+    # Load sound effects
+    pygame.mixer.init()
+    MOVE_SOUND.set_volume(0.1)
+
+    grid = generate_maze()
+    start_cell = grid[0]
+    end_cell = grid[-1]
+
+    current_cell = start_cell
+
+    # Timer variables
+    start_time = pygame.time.get_ticks()
+    score = 0
+
     running = True
     while running:
-        grid = generate_maze()
-        start_cell = grid[0]
-        end_cell = grid[-1]
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    current_cell = move_player('up', current_cell, grid)
+                elif event.key == pygame.K_RIGHT:
+                    current_cell = move_player('right', current_cell, grid)
+                elif event.key == pygame.K_DOWN:
+                    current_cell = move_player('down', current_cell, grid)
+                elif event.key == pygame.K_LEFT:
+                    current_cell = move_player('left', current_cell, grid)
 
-        # Set start and end cells
+        screen.fill(BLACK)
+        draw_grid(grid, screen)
         start_cell.highlight(screen, GREEN)
         end_cell.highlight(screen, GREEN)
+        current_cell.highlight(screen, RED)
 
-        current_cell = start_cell
+        # Calculate elapsed time and score
+        elapsed_time = (pygame.time.get_ticks() - start_time) // 1000
+        score = max(0, 100 - elapsed_time)  # Score decreases with time
 
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                   
-                    if event.key == pygame.K_UP:
-                        current_cell = move_player('up', current_cell, grid)
-                    elif event.key == pygame.K_RIGHT:
-                        current_cell = move_player('right', current_cell, grid)
-                    elif event.key == pygame.K_DOWN:
-                        current_cell = move_player('down', current_cell, grid)
-                    elif event.key == pygame.K_LEFT:
-                        current_cell = move_player('left', current_cell, grid)
+        # Display timer and score
+        font = pygame.font.Font(None, 36)
+        timer_text = font.render(f'Time: {elapsed_time}', True, WHITE)
+        score_text = font.render(f'Score: {score}', True, WHITE)
+        screen.blit(timer_text, (10, 10))
+        screen.blit(score_text, (WIDTH - 150, 10))
 
-            screen.fill(BLACK)
-            draw_grid(grid, screen)
-            start_cell.highlight(screen, RED)
-            end_cell.highlight(screen, GREEN)
-            current_cell.highlight(screen, BLUE)
-
-            # Check win condition
-            if check_win(current_cell, end_cell):
-                font = pygame.font.Font(None, 36)
-                text = font.render('Congratulations! You escaped the maze!', True, WHITE)
-                text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-                screen.blit(text, text_rect)
-                pygame.display.flip()
-                pygame.time.wait(2000)  # Display message for 2 seconds
-                break
-
+        # Check win condition
+        if check_win(current_cell, end_cell):
+            # Play win sound
+            WIN_SOUND.play()
+            
+            # Display win message
+            win_text = font.render('Congratulations! You escaped the maze!', True, WHITE)
+            text_rect = win_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+            screen.blit(win_text, text_rect)
             pygame.display.flip()
-            clock.tick(FPS)
+            pygame.time.wait(2000)  # Display message for 2 seconds
+            break
+
+        pygame.display.flip()
+        clock.tick(FPS)
 
     pygame.quit()
 
